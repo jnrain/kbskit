@@ -157,11 +157,56 @@ class userdata(Structure):
             ('lastinvite', c_int),
             ]
 
+class userdata64(Structure):
+    _fields_ = [
+            ('userid', c_str(sitecfg.IDLEN + 2)),
+            ('__reserved', c_byte * 2),
+            ('realemail', c_str(sitecfg.STRLEN - 16)),
+            ('realname', c_str(sitecfg.NAMELEN)),
+            ('address', c_str(sitecfg.STRLEN)),
+            ('email', c_str(sitecfg.STRLEN)),
+            ('gender', c_byte),
+            ('birthyear', c_ubyte),
+            ('birthmonth', c_ubyte),
+            ('birthday', c_ubyte),
+            ('reg_email', c_str(sitecfg.STRLEN)),
+            ('mobileregistered', c_int),
+            ('mobilenumber', c_str(sitecfg.MOBILE_NUMBER_LEN)),
+            ('OICQ', c_str(sitecfg.STRLEN)),
+            ('ICQ', c_str(sitecfg.STRLEN)),
+            ('MSN', c_str(sitecfg.STRLEN)),
+            ('homepage', c_str(sitecfg.STRLEN)),
+            ('userface_img', c_int),
+            ('userface_url', c_str(sitecfg.STRLEN)),
+            ('userface_width', c_ubyte),
+            ('userface_height', c_ubyte),
+            ('group', c_uint),
+            ('country', c_str(sitecfg.STRLEN)),
+            ('province', c_str(sitecfg.STRLEN)),
+            ('city', c_str(sitecfg.STRLEN)),
+            ('shengxiao', c_ubyte),
+            ('bloodtype', c_ubyte),
+            ('religion', c_ubyte),
+            ('profession', c_ubyte),
+            ('married', c_ubyte),
+            ('education', c_ubyte),
+            ('graduateschool', c_str(sitecfg.STRLEN)),
+            ('character', c_ubyte),
+            ('photo_url', c_str(sitecfg.STRLEN)),
+            ('telephone', c_str(sitecfg.STRLEN)),
+            ('smsprefix', c_str(41)),
+            ('smsend', c_str(41)),
+            ('smsdef', c_uint),
+            ('signum', c_int),
+            ('this_field_is_reserved_by_atppp', c_int),
+            ('lastinvite', c_longlong),
+            ]
+
 
 # main function
 def main(argc, argv):
     from ctypes import sizeof
-    structs = [userec, userdata, fileheader, boardheader, ]
+    structs = [userec, userdata, userdata64, fileheader, boardheader, ]
 
     for s in structs:
         print ('sizeof(%s) == %d' % (unicode(s), sizeof(s), ))
