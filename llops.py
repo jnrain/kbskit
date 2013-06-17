@@ -19,7 +19,7 @@
 
 from __future__ import unicode_literals, division
 
-from ctypes import cast, c_char_p, sizeof, POINTER
+from ctypes import cast, c_char, c_char_p, sizeof, pointer, POINTER
 
 
 def unpack(typ, s):
@@ -41,6 +41,15 @@ def pythonize(cstruct):
             (k, getattr(cstruct, k), )
             for k in fields_iter
             )
+
+
+def unpythonize(cstruct, dict):
+    return cstruct(**dict)
+
+
+def pack(cstruct):
+    ptr = cast(pointer(cstruct), POINTER(c_char * sizeof(cstruct)))
+    return ptr.contents.raw
 
 
 # main function
