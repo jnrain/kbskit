@@ -112,6 +112,70 @@ class userec(Structure):
             ]
 
 
+class userec64(Structure):
+    _fields_ = [
+            ('userid', c_str(sitecfg.IDLEN + 2)),
+            ('flags', c_ubyte),
+            ('title', c_ubyte),
+            ('firstlogin', c_longlong),
+            ('lasthost', c_str(sitecfg.IPLEN)),
+            ('numlogins', c_uint),
+            ('numposts', c_uint),
+            ('passwd', c_str(sitecfg.OLDPASSLEN)),
+            ('unused_padding', c_byte * 2),
+            ('username', c_str(sitecfg.NAMELEN)),
+            ('club_read_rights', c_uint * (sitecfg.MAXCLUB >> 5)),
+            ('club_write_rights', c_uint * (sitecfg.MAXCLUB >> 5)),
+            ('md5passwd', c_str(sitecfg.MD5PASSLEN)),
+            ('lastlogin', c_longlong),
+            ('stay', c_longlong),
+            ('userlevel', c_uint),
+            ('signature', c_int),
+            ('userdefine', c_uint * 2),
+            ('notedate', c_longlong),
+            ('noteline', c_int),
+            ('unused_atppp', c_int),
+            ('exittime', c_longlong),
+            ('usedspace', c_uint),
+            ('unused', c_int * 7),
+            ]
+
+
+class userec280(Structure):
+    '''\
+    ``struct userec`` in 64-bit systems, WITHOUT ``#define``ing ``OS_64BIT``
+
+    '''
+
+    _fields_ = [
+            ('userid', c_str(sitecfg.IDLEN + 2)),
+            ('flags', c_ubyte),
+            ('title', c_ubyte),
+            ('firstlogin', c_longlong),
+            ('lasthost', c_str(sitecfg.IPLEN)),
+            ('numlogins', c_uint),
+            ('numposts', c_uint),
+            ('passwd', c_str(sitecfg.OLDPASSLEN)),
+            ('unused_padding', c_byte * 2),
+            ('username', c_str(sitecfg.NAMELEN)),
+            ('club_read_rights', c_uint * (sitecfg.MAXCLUB >> 5)),
+            ('club_write_rights', c_uint * (sitecfg.MAXCLUB >> 5)),
+            ('md5passwd', c_str(sitecfg.MD5PASSLEN)),
+            ('userlevel', c_uint),
+            ('lastlogin', c_longlong),
+            ('stay', c_longlong),
+            ('signature', c_int),
+            ('userdefine', c_uint * 2),
+            ('notedate', c_longlong),
+            ('noteline', c_int),
+            ('unused_atppp', c_int),
+            ('exittime', c_longlong),
+            ('usedspace', c_uint),
+            ('unused', c_int * 7),
+            ]
+
+
+
 class userdata(Structure):
     _fields_ = [
             ('userid', c_str(sitecfg.IDLEN + 2)),
@@ -156,6 +220,7 @@ class userdata(Structure):
             ('this_field_is_reserved_by_atppp', c_int),
             ('lastinvite', c_int),
             ]
+
 
 class userdata64(Structure):
     _fields_ = [
@@ -206,7 +271,15 @@ class userdata64(Structure):
 # main function
 def main(argc, argv):
     from ctypes import sizeof
-    structs = [userec, userdata, userdata64, fileheader, boardheader, ]
+    structs = [
+            userec,
+            userec64,
+            userec280,
+            userdata,
+            userdata64,
+            fileheader,
+            boardheader,
+            ]
 
     for s in structs:
         print ('sizeof(%s) == %d' % (unicode(s), sizeof(s), ))
