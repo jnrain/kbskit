@@ -61,16 +61,16 @@ def _find_one_att(s, start):
         return None, None, None
 
     # 提取 null-terminated 的文件名
-    fn_start_idx = pad_idx + 8
-    fn_end_idx = s.find(b'\x00', fn_start_idx)
-    if fn_end_idx == -1:
+    fname_start_idx = pad_idx + 8
+    fname_end_idx = s.find(b'\x00', fname_start_idx)
+    if fname_end_idx == -1:
         # 不正常：文件名根本没有被终结！
         # 当作没有有效附件
         return None, None, None
 
     # 给文件名转码
-    fn = s[fn_start_idx:fn_end_idx]
-    unicode_fn = fn.decode(KBS_ENCODING, 'replace')
+    bytes_fname = s[fname_start_idx:fname_end_idx]
+    att_fname = bytes_fname.decode(KBS_ENCODING, 'replace')
 
     # 提取 uint32_be 的附件大小
     size_idx = fn_end_idx + 1
@@ -83,7 +83,7 @@ def _find_one_att(s, start):
         # 至今为止的总长加上附件长度超过了字符串长度
         return None, None, None
 
-    return (unicode_fn, att_start_idx, att_end_idx, )
+    return (att_fname, att_start_idx, att_end_idx, )
 
 
 def main(argv):
