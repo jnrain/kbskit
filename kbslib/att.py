@@ -95,7 +95,13 @@ def main(argv):
 
     for fname in argv[1:]:
         with open(fname, 'rb') as fp:
-            mm = mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ)
+            try:
+                mm = mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ)
+            except ValueError:
+                # 可能会有 ValueError: mmap offset is greater than file size
+                # 神烦
+                continue
+
             for att_name, att_idx, att_end_idx in find_atts(mm):
                 # 往文件里重定向时候的默认编码不是 UTF-8。。。
                 # 需要明确地写出字节流才行
@@ -105,6 +111,9 @@ def main(argv):
                     att_idx,
                     att_end_idx,
                     )).encode(ENC, 'replace'))
+
+            # XXX 这玩意貌似不支持 context manager 协议啊。。。
+            mm.close()
 
     return 0
 
