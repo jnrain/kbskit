@@ -32,12 +32,6 @@ else:
 ATTACHMENT_PADDING = b'\x00\x00\x00\x00\x00\x00\x00\x00'
 SIZE_STRUCT = struct.Struct(b'>I')
 
-OUTPUT_ENCODING = 'utf-8'
-
-STATISTIC_LINE = ('\rT=%(tot)-6d, A=%(att)-3d, S=%(sys)-3d, E=%(err)-3d, '
-                  'Sl=%(sign)s'
-                  )
-
 
 # 函数式编程风格的寻找附件算法
 # 基本上是根据 KBS 相关代码（libBBS/article.c 大概 2100 行往后）改写的
@@ -73,7 +67,7 @@ def _find_one_att(s, start):
     att_fname = bytes_fname.decode(KBS_ENCODING, 'replace')
 
     # 提取 uint32_be 的附件大小
-    size_idx = fn_end_idx + 1
+    size_idx = fname_end_idx + 1
     size = SIZE_STRUCT.unpack(s[size_idx:size_idx + 4])[0]
 
     # 验证附件长度
