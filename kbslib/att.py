@@ -20,6 +20,7 @@
 from __future__ import unicode_literals, division, print_function
 
 import sys
+import locale
 import struct
 import mmap
 
@@ -81,6 +82,8 @@ def _find_one_att(s, start):
 
 
 def main(argv):
+    ENC = locale.getpreferredencoding()
+
     if len(argv) < 2:
         print(
                 'usage: %s <posts to extract attachments from>' % (
@@ -94,12 +97,14 @@ def main(argv):
         with open(fname, 'rb') as fp:
             mm = mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ)
             for att_name, att_idx, att_end_idx in find_atts(mm):
-                print('%s: %s [%d:%d]' % (
+                # 往文件里重定向时候的默认编码不是 UTF-8。。。
+                # 需要明确地写出字节流才行
+                print(('%s: %s [%d:%d]' % (
                     fname,
                     att_name,
                     att_idx,
                     att_end_idx,
-                    ))
+                    )).encode(ENC, 'replace'))
 
     return 0
 
