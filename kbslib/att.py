@@ -20,6 +20,8 @@
 from __future__ import unicode_literals, division, print_function
 
 import sys
+import os
+import hashlib
 import locale
 import struct
 import mmap
@@ -37,6 +39,12 @@ SIZE_STRUCT = struct.Struct(b'>I')
 # 函数式编程风格的寻找附件算法
 # 基本上是根据 KBS 相关代码（libBBS/article.c 大概 2100 行往后）改写的
 def find_atts(s):
+    '''从给定对象中逐一提取出附件的相关信息。
+
+    返回迭代器，结果项的格式为 ``(文件名, 开始偏移, 结束偏移, )``\ 。
+
+    '''
+
     # Python 里就不写尾递归了。。反正 trivial
     start = 0
     while True:
@@ -63,9 +71,11 @@ def _find_one_att(s, start):
         # 当作没有有效附件
         return None, None, None
 
-    # 给文件名转码
+    # 原始行为：给文件名转码
+    # 为什么不转？因为有一小部分名字不属于 GB18030 编码，
+    # 所以希望至少保留一些错误编码的细节以便后续处理
     bytes_fname = s[fname_start_idx:fname_end_idx]
-    att_fname = bytes_fname.decode(KBS_ENCODING, 'replace')
+    # att_fname = bytes_fname.decode(KBS_ENCODING, 'replace')
 
     # 提取 uint32_be 的附件大小
     size_idx = fname_end_idx + 1
@@ -78,7 +88,21 @@ def _find_one_att(s, start):
         # 至今为止的总长加上附件长度超过了字符串长度
         return None, None, None
 
-    return (att_fname, att_start_idx, att_end_idx, )
+    return (bytes_fname, att_start_idx, att_end_idx, )
+
+
+def extract_atts(s):
+    '''从给定对象中逐一提取附件的内容，并计算 SHA512 校验和。
+
+    返回迭代器，结果项的格式为
+    ``(文件名, 起始偏移, 结束偏移, 文件内容, SHA512 校验和, )``\ 。
+
+    '''
+
+    for fname, att_start_idx, att_end_idx in find_atts(s):
+        content = s[att_start_idx:att_end_idx]
+        cksum = hashlib.sha512(content).hexdigest()
+        yield fname, att_start_idx, att_end_idx, content, cksum
 
 
 def main(argv):
@@ -102,15 +126,30 @@ def main(argv):
                 # 神烦
                 continue
 
-            for att_name, att_idx, att_end_idx in find_atts(mm):
+            for att_name, s_idx, e_idx, content, cksum in extract_atts(mm):
                 # 往文件里重定向时候的默认编码不是 UTF-8。。。
                 # 需要明确地写出字节流才行
-                print(('%s: %s [%d:%d]' % (
-                    fname,
-                    att_name,
-                    att_idx,
-                    att_end_idx,
-                    )).encode(ENC, 'replace'))
+                # 不过现在写出的信息变成机器可读的格式了，就无所谓了。
+                # 直接上 bytestring
+                print(b"(b%s, b%s, %d, %d, b'%s', )" % (
+                    repr(fname),
+                    repr(att_name),
+                    s_idx,
+                    e_idx,
+                    cksum,
+                    ))
+
+                # 把提取出的附件存下来，位置随便点，当前工作目录好了
+                # 为了性能，稍微做两层树形
+                # 类似 d/de/deadbeef.jpg 这样。
+                # 用之前自己建好，很简单，这里就不做了。。。
+                tgt_fname = cksum + os.path.splitext(att_name)[1]
+                tgt_path = os.path.join(cksum[0], cksum[:2], tgt_fname)
+                if not os.path.exists(tgt_path):
+                    # 目标文件不存在，开写
+                    # 这里是个教科书一般的 TOCTTOU，不过算了。。。
+                    with open(tgt_path, 'wb') as outfp:
+                        outfp.write(content)
 
             # XXX 这玩意貌似不支持 context manager 协议啊。。。
             mm.close()
