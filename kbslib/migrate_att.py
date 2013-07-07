@@ -33,9 +33,9 @@ else:
 
 UPLOAD_TAG_RE = re.compile(br'\[upload=(\d+)\]\[/upload\]')
 
-LEGACYPIC_TMPL = b'[legacypic:%s]%s[/legacypic]'
-LEGACYAUDIO_TMPL = b'[legacyaudio:%s]%s[/legacyaudio]'
-LEGACYFILE_TMPL = b'[legacyfile:%s]%s[/legacyfile]'
+LEGACYPIC_TMPL = b'[legacypic:%s%s]%s[/legacypic]'
+LEGACYAUDIO_TMPL = b'[legacyaudio:%s%s]%s[/legacyaudio]'
+LEGACYFILE_TMPL = b'[legacyfile:%s%s]%s[/legacyfile]'
 
 PIC_EXTS = {'.jpg', '.jpeg', '.jfif', '.gif', '.png', '.mng', '.bmp', }
 AUDIO_EXTS = {'.mp3', '.ogg', '.wma', '.wav', '.flac', '.ape', '.aac', }
@@ -50,14 +50,15 @@ def gen_legacyatt_tag(fname, cksum):
     # 搞出扩展名，然后选一个合适语义的标签
     # 因为常见扩展名就那几种，就不搞 MIME 了
     ext = os.path.splitext(fname)[1].lower()
-    if ext in PIC_EXTS:
+    extl = ext.lower()
+    if extl in PIC_EXTS:
         tmpl = LEGACYPIC_TMPL
-    elif ext in AUDIO_EXTS:
+    elif extl in AUDIO_EXTS:
         tmpl = LEGACYAUDIO_TMPL
     else:
         tmpl = LEGACYFILE_TMPL
 
-    return tmpl % (cksum, fname, )
+    return tmpl % (cksum, ext, fname, )
 
 
 def upload_transformer_factory_factory(atts):
