@@ -69,12 +69,18 @@ def upload_transformer_factory_factory(atts):
         def _transformer_(match):
             att_idx = int(match.group(1)) - 1  # 0-based
 
+            try:
+                s_idx, att_name, cksum = post_atts[att_idx]
+            except IndexError:
+                # 有可能出现的情况：某附件被删除了，但 upload 标签数量没有减少
+                # 于是最后一个 upload 标签会造成 IndexError
+                # 这种情况直接无视就好
+                return b''
+
             # 告诉外边的世界帖子里的 upload 标签都是哪几个
             # 因为没有用 upload 标签标注的附件按照 KBS 渲染行为
             # 需要在文末另行追加相应标签
             result_wrapper[0].add(att_idx)
-
-            s_idx, att_name, cksum = post_atts[att_idx]
             return gen_att_tag(att_name, cksum)
         return _transformer_
     return upload_transformer_factory
