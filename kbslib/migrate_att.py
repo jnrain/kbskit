@@ -33,9 +33,9 @@ else:
 
 UPLOAD_TAG_RE = re.compile(br'\[upload=(\d+)\]\[/upload\]')
 
-LEGACYPIC_TMPL = b'[legacypic:%s%s]%s[/legacypic]'
-LEGACYAUDIO_TMPL = b'[legacyaudio:%s%s]%s[/legacyaudio]'
-LEGACYFILE_TMPL = b'[legacyfile:%s%s]%s[/legacyfile]'
+ATTPIC_TMPL = b'[pic:%s%s]%s[/pic]'
+ATTAUDIO_TMPL = b'[audio:%s%s]%s[/audio]'
+ATTFILE_TMPL = b'[file:%s%s]%s[/file]'
 
 PIC_EXTS = {'.jpg', '.jpeg', '.jfif', '.gif', '.png', '.mng', '.bmp', }
 AUDIO_EXTS = {'.mp3', '.ogg', '.wma', '.wav', '.flac', '.ape', '.aac', }
@@ -46,17 +46,17 @@ def get_att_info(fp):
         yield ast.literal_eval(l)
 
 
-def gen_legacyatt_tag(fname, cksum):
+def gen_att_tag(fname, cksum):
     # 搞出扩展名，然后选一个合适语义的标签
     # 因为常见扩展名就那几种，就不搞 MIME 了
     ext = os.path.splitext(fname)[1].lower()
     extl = ext.lower()
     if extl in PIC_EXTS:
-        tmpl = LEGACYPIC_TMPL
+        tmpl = ATTPIC_TMPL
     elif extl in AUDIO_EXTS:
-        tmpl = LEGACYAUDIO_TMPL
+        tmpl = ATTAUDIO_TMPL
     else:
-        tmpl = LEGACYFILE_TMPL
+        tmpl = ATTFILE_TMPL
 
     return tmpl % (cksum, ext, fname, )
 
@@ -75,7 +75,7 @@ def upload_transformer_factory_factory(atts):
             result_wrapper[0].add(att_idx)
 
             s_idx, att_name, cksum = post_atts[att_idx]
-            return gen_legacyatt_tag(att_name, cksum)
+            return gen_att_tag(att_name, cksum)
         return _transformer_
     return upload_transformer_factory
 
@@ -134,7 +134,7 @@ def main(argv):
             # 有附件没有通过 upload 标签暴露。那就在文末加上
             implicit_atts = set(xrange(num_atts)).difference(explicit_atts)
             implicit_atts_str = b'\n'.join(
-                    gen_legacyatt_tag(fname, cksum)
+                    gen_att_tag(fname, cksum)
                     for att_idx, (s_idx, fname, cksum) in enumerate(post_atts)
                     if att_idx in implicit_atts
                     )
